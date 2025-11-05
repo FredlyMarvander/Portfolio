@@ -2,16 +2,18 @@
 
 import Certificate from "@/components/certificate";
 import Navbar from "@/components/navbar";
-import { Experience, Project, Skill } from "@/type";
+import { Experience, LinkedIn, Project, Skill } from "@/type";
 import {
   Brain,
   GraduationCap,
   Laptop,
   Linkedin,
   MapPin,
+  StickyNote,
   Target,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { cache, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 
@@ -27,6 +29,23 @@ export default function Home() {
 
   const [openToWork, setOpenToWork] = useState(false);
   const [sentence, setSentence] = useState("");
+
+  const [linkedIn, setLinkedIn] = useState<LinkedIn[]>([]);
+  const [expandedPosts, setExpandedPosts] = useState<Record<number, boolean>>(
+    {}
+  );
+
+  const togglePostExpansion = (index: number) => {
+    setExpandedPosts((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
+  const truncateText = (text: string, maxLength: number = 200) => {
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + "...";
+  };
 
   const getAbout = async () => {
     try {
@@ -142,28 +161,56 @@ export default function Home() {
     }
   };
 
+  const getLinkedIn = async () => {
+    try {
+      const response = await fetch("/api/linkedin");
+      const data = await response.json();
+      setLinkedIn(data);
+    } catch (error) {
+      console.error("Error fetching skills:", error);
+    }
+  };
+
   useEffect(() => {
     getData();
     getProjects();
     getSkills();
     getAbout();
+    getLinkedIn();
   }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
+      (entries, obs) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.remove("opacity-0");
-            entry.target.classList.add("animate-fadeInUp");
+            const el = entry.target as HTMLElement;
+            el.classList.remove("opacity-0");
+            el.classList.add("animate-fadeInUp");
+            obs.unobserve(entry.target);
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.15, rootMargin: "0px 0px -80px 0px" }
     );
 
-    const elements = document.querySelectorAll(".opacity-0");
-    elements.forEach((el) => observer.observe(el));
+    // Observe the main content blocks inside each section (those that start with opacity-0)
+    const sectionIds = [
+      "about",
+      "experience",
+      "projects",
+      "certificates",
+      "skills",
+      "posts",
+      "contact",
+    ];
+    sectionIds.forEach((id) => {
+      const section = document.getElementById(id);
+      if (section) {
+        const target = section.querySelector(".opacity-0");
+        if (target) observer.observe(target);
+      }
+    });
 
     return () => observer.disconnect();
   }, []);
@@ -176,19 +223,19 @@ export default function Home() {
         id="home"
       >
         <div className="w-full max-w-3xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white opacity-0 animate-fadeInUp delay-100">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white animate-fadeInUp">
             Hi, I'm <span className="text-cyan-400">Fredly Marvander.</span>
           </h2>
-          <h3 className="text-2xl sm:text-3xl mt-5 mb-5 text-gray-400 font-bold opacity-0 animate-fadeInUp delay-200">
+          <h3 className="text-2xl sm:text-3xl mt-5 mb-5 text-gray-400 font-bold animate-fadeInUp delay-100">
             Software Developer
           </h3>
-          <p className="text-base sm:text-lg text-white opacity-0 animate-fadeInUp delay-300">
+          <p className="text-base sm:text-lg text-white animate-fadeInUp delay-200">
             I love building meaningful web experiences and helping others grow
             through technology. From designing clean interfaces to writing
             efficient backend logic, I'm always ready to build, learn, and
             share.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 mt-7 opacity-0 animate-fadeInUp delay-400">
+          <div className="flex flex-col sm:flex-row gap-4 mt-7 animate-fadeInUp delay-300">
             <a
               href="#contact"
               className="px-6 py-3 rounded-lg bg-cyan-400 text-slate-900 font-semibold hover:bg-cyan-500 transition-all flex items-center justify-center"
@@ -242,7 +289,7 @@ export default function Home() {
         className="h-full min-w-screen bg-slate-800 flex items-center justify-center px-4 sm:px-6 lg:px-8"
         id="about"
       >
-        <div className="w-full max-w-4xl mx-auto h-full py-12 sm:py-16 lg:py-20 opacity-0 animate-fadeInUp delay-100">
+        <div className="w-full max-w-4xl mx-auto h-full py-12 sm:py-16 lg:py-20 opacity-0 delay-100">
           <div className="group relative inline-block cursor-pointer mb-8">
             <h1 className="text-white font-bold text-2xl mb-5 flex items-center">
               <svg
@@ -414,7 +461,7 @@ export default function Home() {
                 className={`p-2.5 rounded-lg transition-colors flex-shrink-0 ${
                   openToWork
                     ? "bg-cyan-400/20 group-hover/item:bg-cyan-400/30"
-                    : "bg-cyan-400/10 group-hover/item:bg-cyan-400/20"
+                    : "bg-cyan-400/10 group-hover:item:bg-cyan-400/20"
                 }`}
               >
                 <MapPin className="text-cyan-400 w-6 h-6" />
@@ -453,7 +500,7 @@ export default function Home() {
         className="h-full min-w-screen bg-slate-900 flex items-center justify-center px-4 sm:px-6 lg:px-8"
         id="experience"
       >
-        <div className="w-full max-w-4xl mx-auto h-full py-12 sm:py-16 lg:py-20 opacity-0 animate-fadeInUp delay-100">
+        <div className="w-full max-w-4xl mx-auto h-full py-12 sm:py-16 lg:py-20 opacity-0 delay-100">
           <div className="group relative inline-block cursor-pointer">
             <h1 className="text-white font-bold text-2xl mb-5 flex items-center">
               <svg
@@ -475,56 +522,61 @@ export default function Home() {
             </h1>
             <span className="absolute bottom-0 left-0 w-16 h-1 bg-cyan-400 rounded-full transition-all duration-300 group-hover:w-48"></span>
           </div>
-          <div className="group w-full border-2 flex flex-col sm:flex-row border-cyan-400 mt-6 rounded-lg hover:scale-[1.02] hover:shadow-[0_0_15px_#22d3ee] transition-all overflow-hidden">
-            <Image
-              src="/image.png"
-              alt="Experience"
-              width={200}
-              height={300}
-              className="filter grayscale group-hover:grayscale-0 transition-all duration-300 w-full sm:w-auto h-18 sm:h-55 object-cover"
-            />
-            <div className="p-4 sm:ml-4 sm:mt-3 flex-1 flex flex-col ">
-              <div className="flex flex-col sm:flex-row justify-between items-start w-full gap-2 sm:gap-0">
-                <div>
-                  <h2 className="text-lg font-bold text-white">
-                    Frontend Developer Intern
-                  </h2>
-                  <p className="text-md text-gray-400 mt-1">ClickBooth</p>
-                </div>
+          {experiences.map((experience, idx) => (
+            <div
+              key={idx}
+              className="group w-full border-2 flex flex-col sm:flex-row border-cyan-400 mt-6 rounded-lg hover:scale-[1.02] hover:shadow-[0_0_15px_#22d3ee] transition-all overflow-hidden"
+            >
+              <img
+                src={experience.image}
+                alt="Experience"
+                width={200}
+                height={300}
+                className="filter grayscale group-hover:grayscale-0 transition-all duration-300 w-full sm:w-auto h-18 sm:h-55 object-cover"
+              />
+              <div className="p-4 sm:ml-4 sm:mt-3 flex-1 flex flex-col ">
+                <div className="flex flex-col sm:flex-row justify-between items-start w-full gap-2 sm:gap-0">
+                  <div>
+                    <h2 className="text-lg font-bold text-white">
+                      {experience.title}
+                    </h2>
+                    <p className="text-md text-gray-400 mt-1">
+                      {experience.company}
+                    </p>
+                  </div>
 
-                <h3 className="text-cyan-400 text-lg flex items-center whitespace-nowrap">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width={24}
-                    height={24}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-briefcase-icon lucide-briefcase text-cyan-400 inline mr-2 text-md"
-                  >
-                    <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                    <rect width={20} height={14} x={2} y={6} rx={2} />
-                  </svg>
-                  2025-2025
-                </h3>
+                  <h3 className="text-cyan-400 text-lg flex items-center whitespace-nowrap">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width={24}
+                      height={24}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-briefcase-icon lucide-briefcase text-cyan-400 inline mr-2 text-md"
+                    >
+                      <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                      <rect width={20} height={14} x={2} y={6} rx={2} />
+                    </svg>
+                    {experience.startDate}-{experience.endDate}
+                  </h3>
+                </div>
+                <p className="text-sm sm:text-base text-white mt-4">
+                  {experience.description}
+                </p>
               </div>
-              <p className="text-sm sm:text-base text-white mt-4">
-                Contributed to building responsive web interfaces using modern
-                frontend technologies. Collaborated with design and backend
-                teams to deliver user-friendly features.
-              </p>
             </div>
-          </div>
+          ))}
         </div>
       </div>
       <div
         className="h-full min-w-screen bg-slate-800 flex items-center justify-center px-4 sm:px-6 lg:px-8"
         id="projects"
       >
-        <div className="w-full max-w-6xl mx-auto h-full py-12 sm:py-16 lg:py-20 opacity-0 animate-fadeInUp delay-100">
+        <div className="w-full max-w-6xl mx-auto h-full py-12 sm:py-16 lg:py-20 opacity-0 delay-100">
           <div className="group relative inline-block cursor-pointer">
             <h1 className="text-white font-bold text-2xl mb-5 flex items-center">
               <svg
@@ -636,7 +688,7 @@ export default function Home() {
         className="h-full min-w-screen bg-slate-800 flex items-center justify-center px-4 sm:px-6 lg:px-8"
         id="skills"
       >
-        <div className="w-full max-w-6xl mx-auto h-full py-12 sm:py-16 lg:py-20 opacity-0 animate-fadeInUp delay-100">
+        <div className="w-full max-w-6xl mx-auto h-full py-12 sm:py-16 lg:py-20 opacity-0 delay-100">
           <div className="group relative inline-block cursor-pointer mb-8">
             <h1 className="text-white font-bold text-2xl mb-5 flex items-center">
               <svg
@@ -806,7 +858,7 @@ export default function Home() {
         className="h-full min-w-screen bg-slate-900 flex items-center justify-center px-4 sm:px-6 lg:px-8"
         id="posts"
       >
-        <div className="w-full max-w-4xl mx-auto h-full py-12 sm:py-16 lg:py-20 opacity-0 animate-fadeInUp delay-100">
+        <div className="w-full max-w-4xl mx-auto h-full py-12 sm:py-16 lg:py-20 opacity-0 delay-100">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 sm:gap-0">
             <div className="group relative inline-block cursor-pointer">
               <h1 className="text-white font-bold text-2xl mb-5 flex items-center">
@@ -815,8 +867,8 @@ export default function Home() {
               </h1>
               <span className="absolute bottom-0 left-0 w-16 h-1 bg-cyan-400 rounded-full transition-all duration-300 group-hover:w-53"></span>
             </div>
-            <a
-              href="#"
+            <Link
+              href="/linkedin"
               className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-2 transition-all"
             >
               See All
@@ -835,22 +887,149 @@ export default function Home() {
                 <path d="m21 3-9 9" />
                 <path d="M15 3h6v6" />
               </svg>
-            </a>
+            </Link>
           </div>
 
           {/* Posts Grid */}
           <div className="space-y-6">
-            {/* Post 1 */}
-            <div className="group/post bg-slate-900 p-4 sm:p-6 rounded-xl border border-cyan-400/30 hover:border-cyan-400 hover:shadow-[0_0_25px_rgba(34,211,238,0.2)] transition-all duration-300">
-              <div className="flex items-start gap-3 sm:gap-4 mb-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-cyan-400 rounded-full flex items-center justify-center text-slate-900 font-bold flex-shrink-0 text-sm sm:text-base">
-                  PK
+            {linkedIn.slice(0, 2).map((post, index) => (
+              <div
+                key={index}
+                className="group/post bg-slate-900 backdrop-blur-sm p-6 rounded-2xl border border-slate-700/50 hover:border-cyan-400/50 hover:shadow-[0_0_30px_rgba(34,211,238,0.15)] transition-all duration-300"
+              >
+                {/* Post Header */}
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="relative">
+                    <img
+                      src={post.avatarUrl}
+                      alt={post.name}
+                      className="w-14 h-14 rounded-full object-cover border-2 border-slate-600 group-hover/post:border-cyan-400/50 transition-all"
+                    />
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-600 rounded-full border-2 border-slate-800 flex items-center justify-center">
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="white"
+                      >
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-bold text-lg group-hover/post:text-cyan-400 transition-colors">
+                      {post.name}
+                    </h3>
+                    <p className="text-gray-400 text-sm">Professional Update</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-white font-bold text-lg group-hover/post:text-cyan-400 transition-colors">
-                    Priambodo Kurniawan
-                  </h3>
-                  <p className="text-gray-400 text-sm flex items-center gap-2">
+
+                {/* Post Content */}
+                {post.content && (
+                  <div className="mb-6">
+                    <p className="text-gray-200 leading-relaxed text-base">
+                      {expandedPosts[index]
+                        ? post.content
+                        : truncateText(post.content, 200)}
+                    </p>
+                    {post.content.length > 200 && (
+                      <button
+                        onClick={() => togglePostExpansion(index)}
+                        className="text-cyan-400 hover:text-cyan-300 font-medium text-sm mt-3 transition-colors inline-flex items-center gap-1"
+                      >
+                        {expandedPosts[index] ? "See Less" : "See More"}
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className={`transition-transform ${
+                            expandedPosts[index] ? "rotate-180" : ""
+                          }`}
+                        >
+                          <path d="m6 9 6 6 6-6" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Post Image */}
+                {post.urls && (
+                  <div className="mb-6 rounded-xl overflow-hidden bg-slate-700/30">
+                    <img
+                      src={post.urls}
+                      alt="Post content"
+                      className="w-full h-auto object-cover group-hover/post:scale-[1.02] transition-transform duration-500"
+                    />
+                  </div>
+                )}
+
+                {/* Post Footer */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-slate-700/50 gap-4">
+                  <div className="flex items-center gap-6 text-gray-400 text-sm">
+                    <span className="flex items-center gap-2 hover:text-cyan-400 transition-colors cursor-pointer">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M7 10v12" />
+                        <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z" />
+                      </svg>
+                      {post.likes}
+                    </span>
+                    <span className="flex items-center gap-2 hover:text-cyan-400 transition-colors cursor-pointer">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+                      </svg>
+                      {post.comments}
+                    </span>
+                    <span className="flex items-center gap-2 hover:text-cyan-400 transition-colors cursor-pointer">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="17 1 21 5 17 9" />
+                        <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                        <polyline points="7 23 3 19 7 15" />
+                        <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                      </svg>
+                      {post.shares}
+                    </span>
+                  </div>
+                  <a
+                    href={post.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-400 hover:text-cyan-300 font-medium text-sm rounded-lg border border-cyan-600/30 hover:border-cyan-400/50 transition-all"
+                  >
+                    View on LinkedIn
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="16"
@@ -862,249 +1041,30 @@ export default function Home() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
-                      <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-                      <line x1="16" x2="16" y1="2" y2="6" />
-                      <line x1="8" x2="8" y1="2" y2="6" />
-                      <line x1="3" x2="21" y1="10" y2="10" />
+                      <path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6" />
+                      <path d="m21 3-9 9" />
+                      <path d="M15 3h6v6" />
                     </svg>
-                    2w
-                  </p>
+                  </a>
                 </div>
               </div>
-
-              <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm sm:text-base">
-                ✨ Langsung kejadian...
-              </h4>
-
-              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-4">
-                Kemarin 10 April, saya berdiri di depan dua grup yang baru saja
-                menyelesaikan final project terakhir mereka. 🎓{" "}
-                <span className="text-cyan-400 font-semibold">
-                  Graduation day
-                </span>{" "}
-                — momen yang selalu penuh emosi. Ada rasa bangga, harapan, dan
-                puas melihat hasil perjuangan mereka.
-              </p>
-
-              <div className="mb-4 rounded-lg overflow-hidden">
-                <img
-                  src="https://media.licdn.com/dms/image/v2/D5622AQEHVkqBKnIrYw/feedshare-shrink_800/B56ZPzoLqC8IAg-/0/1744615506664?e=1747872000&v=beta&t=g_pBkQ3-VCJiC3S-v5WRr5J9bQm7SYV7QXg7UDyN3Ew"
-                  alt="Graduation"
-                  className="w-full h-auto object-cover group-hover/post:scale-105 transition-transform duration-300"
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-gray-700 gap-4 sm:gap-0">
-                <div className="flex items-center gap-4 sm:gap-6 text-gray-400 text-xs sm:text-sm">
-                  <span className="flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M7 10v12" />
-                      <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z" />
-                    </svg>
-                    27
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
-                    </svg>
-                    2
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="17 1 21 5 17 9" />
-                      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                      <polyline points="7 23 3 19 7 15" />
-                      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-                    </svg>
-                    1
-                  </span>
-                </div>
-                <a
-                  href="#"
-                  className="text-cyan-400 hover:text-cyan-300 font-semibold text-xs sm:text-sm transition-all"
-                >
-                  View Post
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="inline ml-1"
-                  >
-                    <path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6" />
-                    <path d="m21 3-9 9" />
-                    <path d="M15 3h6v6" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-
-            {/* Post 2 */}
-            <div className="group/post bg-slate-900 p-4 sm:p-6 rounded-xl border border-cyan-400/30 hover:border-cyan-400 hover:shadow-[0_0_25px_rgba(34,211,238,0.2)] transition-all duration-300">
-              <div className="flex items-start gap-3 sm:gap-4 mb-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-cyan-400 rounded-full flex items-center justify-center text-slate-900 font-bold flex-shrink-0 text-sm sm:text-base">
-                  PK
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-white font-bold text-lg group-hover/post:text-cyan-400 transition-colors">
-                    Priambodo Kurniawan
-                  </h3>
-                  <p className="text-gray-400 text-sm flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-                      <line x1="16" x2="16" y1="2" y2="6" />
-                      <line x1="8" x2="8" y1="2" y2="6" />
-                      <line x1="3" x2="21" y1="10" y2="10" />
-                    </svg>
-                    3mo
-                  </p>
-                </div>
-              </div>
-
-              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-4">
-                Congratulations on this incredible achievement Yotam Putra &
-                teams! 🎉 Your hard work and dedication truly paid off, and
-                Pawtopia is a great example of your creativity and technical
-                skills.
-              </p>
-
-              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed">
-                Proud to see you ready to tackle the next chapter in your
-                career—keep shining and inspiring! 🚀
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-gray-700 mt-4 gap-4 sm:gap-0">
-                <div className="flex items-center gap-4 sm:gap-6 text-gray-400 text-xs sm:text-sm">
-                  <span className="flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M7 10v12" />
-                      <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z" />
-                    </svg>
-                    20
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
-                    </svg>
-                    0
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="17 1 21 5 17 9" />
-                      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                      <polyline points="7 23 3 19 7 15" />
-                      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-                    </svg>
-                    1
-                  </span>
-                </div>
-                <a
-                  href="#"
-                  className="text-cyan-400 hover:text-cyan-300 font-semibold text-xs sm:text-sm transition-all"
-                >
-                  View Post
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="inline ml-1"
-                  >
-                    <path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6" />
-                    <path d="m21 3-9 9" />
-                    <path d="M15 3h6v6" />
-                  </svg>
-                </a>
-              </div>
-            </div>
+            ))}
           </div>
+          <Link href="/linkedin">
+            <div className="flex justify-center mt-12">
+              <button className="group px-8 py-3 bg-transparent border-2 border-cyan-400/70 hover:border-cyan-400 text-cyan-400 hover:text-slate-900 font-semibold rounded-xl hover:bg-cyan-400 transition-all flex items-center gap-3 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]">
+                <StickyNote className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                <span>View All Posts</span>
+              </button>
+            </div>
+          </Link>
         </div>
       </div>
       <div
         className="h-full min-w-screen bg-slate-800 flex items-center justify-center px-4 sm:px-6 lg:px-8"
         id="contact"
       >
-        <div className="w-full max-w-3xl mx-auto h-full py-12 sm:py-16 lg:py-20 opacity-0 animate-fadeInUp delay-100">
+        <div className="w-full max-w-3xl mx-auto h-full py-12 sm:py-16 lg:py-20 opacity-0 delay-100">
           <div className="group relative inline-block cursor-pointer">
             <h1 className="text-white font-bold text-2xl mb-5 flex items-center">
               <svg

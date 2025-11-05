@@ -42,7 +42,7 @@ export default function Certificate() {
       className="h-full min-w-screen bg-slate-900 flex items-center justify-center px-4 sm:px-6 lg:px-8"
       id="certificates"
     >
-      <div className="w-full max-w-6xl mx-auto h-full py-12 sm:py-16 lg:py-20 opacity-0 animate-fadeInUp delay-100">
+      <div className="w-full max-w-6xl mx-auto h-full py-12 sm:py-16 lg:py-20 opacity-0 delay-100">
         {/* Section Header */}
         <div className="mb-12">
           <div className="group relative inline-block cursor-pointer mb-6">

@@ -44,3 +44,15 @@ export type Certificate = {
   credentialUrl: string;
   description: string;
 };
+
+export type LinkedIn = {
+  url: string;
+  content: string;
+  urls: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  impressions: number;
+  name: string;
+  avatarUrl: string;
+};
