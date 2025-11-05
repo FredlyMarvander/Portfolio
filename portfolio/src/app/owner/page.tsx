@@ -618,7 +618,7 @@ export default function OwnerPage() {
                           </button>
                           <button
                             onClick={() =>
-                              handleDeleteItem("experience", exp._id)
+                              handleDeleteItem("experience", exp._id as string)
                             }
                             className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
                             title="Delete"
@@ -729,7 +729,7 @@ export default function OwnerPage() {
                           </button>
                           <button
                             onClick={() =>
-                              handleDeleteItem("project", proj._id)
+                              handleDeleteItem("project", proj._id as string)
                             }
                             className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
                             title="Delete"
@@ -789,7 +789,7 @@ export default function OwnerPage() {
                 <tbody className="bg-slate-900/50">
                   {certificates.map((cert, idx) => (
                     <tr
-                      key={cert.id || idx}
+                      key={cert._id || idx}
                       className="border-b border-slate-800 hover:bg-slate-800/50 transition-colors cursor-pointer"
                       onClick={() => handleOpenModal("certificate", cert)}
                     >
@@ -819,7 +819,10 @@ export default function OwnerPage() {
                           </button>
                           <button
                             onClick={() =>
-                              handleDeleteItem("certificate", cert._id)
+                              handleDeleteItem(
+                                "certificate",
+                                cert._id as string
+                              )
                             }
                             className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
                             title="Delete"
