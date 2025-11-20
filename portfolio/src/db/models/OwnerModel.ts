@@ -45,6 +45,7 @@ export class OwnerModel {
     }
 
     const token = signToken({ id: owner._id });
+    console.log(token);
 
     return {
       access_token: token,

@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 export async function middleware(request: NextRequest) {
   try {
     const cookieStore = await cookies();
+
     const authorization = cookieStore.get("Authorization");
     if (!authorization) {
       throw { message: "Unauthorized", status: "401" };
@@ -42,5 +43,5 @@ export async function middleware(request: NextRequest) {
   }
 }
 export const config = {
-  matcher: ["/owner/home"],
+  matcher: ["/owner"],
 };

@@ -38,7 +38,7 @@ export default function Navbar() {
         const element = document.getElementById(section);
         if (element) {
           const rect = element.getBoundingClientRect();
-          return rect.top <= 150 && rect.bottom >= 150;
+          return rect.top <= 200 && rect.bottom >= 200;
         }
         return false;
       });
@@ -100,7 +100,8 @@ export default function Navbar() {
     const element = document.getElementById(targetId);
 
     if (element) {
-      const offset = targetId === "home" ? 0 : 100;
+      const offset =
+        targetId === "home" ? 0 : targetId === "contact" ? 50 : 100;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - offset;
 
@@ -119,7 +120,7 @@ export default function Navbar() {
         className={`fixed top-2 sm:top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out navbar-entrance
           ${
             scrolled
-              ? "w-[95%] sm:w-[90%] md:w-[85%] lg:w-[80%] xl:w-[70%] bg-slate-900/95 border border-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.3)] rounded-full backdrop-blur-xl py-2 sm:py-3"
+              ? "w-[98%] sm:w-[95%] md:w-[80%] lg:w-[88%] xl:w-[85%] bg-slate-900/95 border border-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.3)] rounded-full backdrop-blur-xl py-2 sm:py-3"
               : "w-[98%] sm:w-full bg-slate-900/50 border-none shadow-none rounded-2xl sm:rounded-none py-3 sm:py-4 backdrop-blur-sm"
           }
           ${
@@ -168,7 +169,7 @@ export default function Navbar() {
           </nav>
 
           {/* Tablet Navigation - Icon Only */}
-          <nav className="hidden md:flex lg:hidden items-center gap-1">
+          <nav className="hidden md:flex lg:hidden items-center gap-1 ">
             {navItems.map((item, idx) => {
               const isActive = activeSection === item.link.replace("#", "");
               return (
